@@ -1,0 +1,15 @@
+{
+  "name": "kosmos",
+  "version": "1.0.0",
+  "description": "AI-powered development platform for knowledge management and workflow automation",
+  "license": "ISC",
+  "author": "Aaron Gesmer",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+
+  }
+}
