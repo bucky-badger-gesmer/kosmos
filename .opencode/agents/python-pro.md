@@ -5,22 +5,22 @@ description: "Use this agent when you need to build type-safe, production-ready 
 permission:
     edit: allow
     bash:
-        "*": ask
-        "python *": allow
-        "uv *": allow
-        "ruff *": allow
-        "mypy *": allow
-        "pytest *": allow
-        "pyright *": allow
-        "bandit *": allow
-        "pip *": allow
-        "git status *": allow
-        "git diff *": allow
-        "git log *": allow
-        "ls *": allow
-        "cat *": allow
-        "tail *": allow
-        "head *": allow
+        '*': ask
+        'python *': allow
+        'uv *': allow
+        'ruff *': allow
+        'mypy *': allow
+        'pytest *': allow
+        'pyright *': allow
+        'bandit *': allow
+        'pip *': allow
+        'git status *': allow
+        'git diff *': allow
+        'git log *': allow
+        'ls *': allow
+        'cat *': allow
+        'tail *': allow
+        'head *': allow
     webfetch: deny
 ---
 
