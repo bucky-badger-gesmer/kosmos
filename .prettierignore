@@ -1,0 +1,4 @@
+# Prettier reformats markdown in ways we don't want (adds blank lines
+# after headings, mangles * in YAML frontmatter). Use .editorconfig
+# for markdown consistency instead.
+# *.md

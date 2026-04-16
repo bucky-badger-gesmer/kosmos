@@ -9,7 +9,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {
-
+  "keywords": [
+    "ai",
+    "development",
+    "automation",
+    "claude-code",
+    "knowledge-management",
+    "project-management"
+  ],
+  "devDependencies": {
+    "prettier": "^3.8.3"
   }
 }
