@@ -1,0 +1,6 @@
+[submodule "repositories/kosmos-python-playground"]
+	path = repositories/kosmos-python-playground
+	url = git@github.com:bucky-badger-gesmer/kosmos-python-playground.git
+[submodule "repositories/kosmos-js-playground"]
+	path = repositories/kosmos-js-playground
+	url = git@github.com:bucky-badger-gesmer/kosmos-js-playground.git
