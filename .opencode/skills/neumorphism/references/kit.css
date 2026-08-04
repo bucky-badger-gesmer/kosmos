@@ -1,0 +1,405 @@
+/* Kosmos Neumorphism — canonical design system kit
+   Soft-touch UI: every element shares the surface with the page;
+   depth comes from paired light/dark dual shadows. */
+
+:root {
+  --surface: #e4e8f0;
+  --shadow-dark: #c7cdd9;
+  --shadow-light: #ffffff;
+  --ink: #2f3548;
+  --muted: #6b7285;
+  --accent: #0e9f8e;
+  --accent-soft: rgba(14, 159, 142, 0.12);
+  --neg: #d9534f;
+  --radius: 22px;
+  --font-display: "Unbounded", "Bricolage Grotesque", sans-serif;
+  --font-body: "Bricolage Grotesque", sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--surface);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- depth recipes ---------- */
+.raised {
+  background: var(--surface);
+  box-shadow: 9px 9px 18px var(--shadow-dark), -9px -9px 18px var(--shadow-light);
+}
+.pressed {
+  box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  background: var(--surface);
+  border: none;
+  border-radius: 14px;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+.btn:hover {
+  box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+}
+.btn:active {
+  box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+  transform: translateY(1px);
+}
+.btn--accent {
+  color: var(--accent);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- toggle switch ---------- */
+.switch {
+  width: 64px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface);
+  cursor: pointer;
+  position: relative;
+  box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+  transition: box-shadow 0.25s ease;
+}
+.switch .knob {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), background 0.25s;
+}
+.switch[aria-checked="true"] {
+  box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+}
+.switch[aria-checked="true"] .knob {
+  transform: translateX(30px);
+  background: linear-gradient(180deg, #12b3a0, var(--accent));
+  box-shadow: 2px 2px 6px rgba(14, 159, 142, 0.4), -1px -1px 3px rgba(255, 255, 255, 0.6);
+}
+.switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- segmented control ---------- */
+.seg {
+  display: flex;
+  padding: 5px;
+  border-radius: 14px;
+  gap: 4px;
+  box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+}
+.seg-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 1.15rem;
+  cursor: pointer;
+  transition: box-shadow 0.25s ease, color 0.25s ease;
+}
+.seg-btn.is-active {
+  color: var(--accent);
+  box-shadow: 3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);
+}
+.seg-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ---------- status pill + LED ---------- */
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1.35rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.led {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: inset 2px 2px 3px rgba(0, 0, 0, 0.25), inset -1px -1px 2px rgba(255, 255, 255, 0.5),
+    0 0 0 1px rgba(14, 159, 142, 0.35);
+}
+
+/* ---------- stat card ---------- */
+.card {
+  padding: 1.45rem 1.45rem 1.25rem;
+  border-radius: var(--radius);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+}
+.card-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.card-label .glyph {
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.45rem, 2.6vw, 1.9rem);
+  margin: 0.75rem 0 0.55rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+}
+.delta--pos {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.delta--neg {
+  color: var(--neg);
+  background: rgba(217, 83, 79, 0.1);
+}
+
+/* sparkline: raised bars in a carved trough */
+.spark-trough {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 34px;
+  margin-top: 0.95rem;
+  padding: 4px 6px;
+  border-radius: 12px;
+  box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+}
+.spark i {
+  flex: 1;
+  border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(180deg, #12b3a0, var(--accent));
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.12), -1px -1px 3px rgba(255, 255, 255, 0.7);
+}
+
+/* ---------- bar chart in a carved well ---------- */
+.chart-well {
+  border-radius: 18px;
+  padding: 1.1rem 1rem 0.9rem;
+  box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+}
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(4px, 1.2vw, 10px);
+  height: 150px;
+}
+.col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  height: 100%;
+}
+.bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+.bar {
+  position: relative;
+  width: 100%;
+  height: var(--h);
+  border-radius: 8px 8px 3px 3px;
+  background: linear-gradient(180deg, #12b3a0, var(--accent));
+  box-shadow: 3px 4px 8px rgba(0, 0, 0, 0.16), -2px -2px 6px rgba(255, 255, 255, 0.8);
+  transition: filter 0.25s;
+}
+.bar::after {
+  content: attr(data-v);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.32rem 0.6rem;
+  border-radius: 9px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+}
+.bar:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.bar:hover {
+  filter: brightness(1.08);
+}
+.day {
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ---------- progress track ---------- */
+.track {
+  height: 9px;
+  border-radius: 999px;
+  box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+}
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), #12b3a0);
+  width: var(--w);
+}
+
+/* ---------- raised chip (route codes, tags) ---------- */
+.chip {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 400;
+  color: var(--accent);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 0.3rem 0.5rem;
+  white-space: nowrap;
+  box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+}
+
+/* ---------- typography helpers ---------- */
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.9rem;
+}
+h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 4.4vw, 2.7rem);
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+.sub {
+  margin-top: 0.9rem;
+  color: var(--muted);
+  font-size: 0.98rem;
+  max-width: 34ch;
+}
+.panel-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.3rem;
+  display: flex;
+  justify-content: space-between;
+}
+.panel-title em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+/* ---------- motion ---------- */
+.rise {
+  animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes grow {
+  to { transform: scaleY(1); }
+}
+@keyframes widen {
+  to { width: var(--w); }
+}
+.bar {
+  transform-origin: bottom;
+  transform: scaleY(0);
+  animation: grow 1s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--d);
+}
+.fill {
+  width: 0;
+  animation: widen 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--d);
+}
+.spark i {
+  transform-origin: bottom;
+  transform: scaleY(0);
+  animation: grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--d);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 860px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .panels { grid-template-columns: 1fr; }
+  .controls { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  .spark i { transform: scaleY(1); animation: none; }
+  .bar { transform: scaleY(1); animation: none; }
+  .fill { width: var(--w); animation: none; }
+}
