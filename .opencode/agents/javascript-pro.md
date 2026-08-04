@@ -4,6 +4,7 @@ description: >
   Senior JavaScript developer for modern ES2023+ and Node.js 20+ projects.
   Use for building, optimizing, or refactoring JavaScript code across browser,
   Node.js, or full-stack applications.
+mode: subagent
 permission:
   edit: allow
   bash:

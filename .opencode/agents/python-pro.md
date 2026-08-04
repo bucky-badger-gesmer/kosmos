@@ -1,7 +1,7 @@
 ---
 name: python-pro
-mode: primary
 description: 'Senior Python developer for building type-safe, production-ready code. Specializes in FastAPI, Django, async patterns, data science, and performance optimization.'
+mode: subagent
 permission:
   edit: allow
   bash:
