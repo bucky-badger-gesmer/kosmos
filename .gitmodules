@@ -4,3 +4,6 @@
 [submodule "repositories/kosmos-js-playground"]
 	path = repositories/kosmos-js-playground
 	url = git@github.com:bucky-badger-gesmer/kosmos-js-playground.git
+[submodule "repositories/aws-saa-practice-app"]
+	path = repositories/aws-saa-practice-app
+	url = git@github.com:bucky-badger-gesmer/aws-saa-practice-app.git
