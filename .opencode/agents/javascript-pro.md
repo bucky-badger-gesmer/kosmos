@@ -5,25 +5,6 @@ description: >
   Use for building, optimizing, or refactoring JavaScript code across browser,
   Node.js, or full-stack applications.
 mode: subagent
-permission:
-  edit: allow
-  bash:
-    '*': ask
-    'node *': allow
-    'npm *': allow
-    'npx *': allow
-    'pnpm *': allow
-    'yarn *': allow
-    'eslint *': allow
-    'prettier *': allow
-    'vitest *': allow
-    'jest *': allow
-    'tsc *': allow
-    'git status *': allow
-    'git diff *': allow
-    'git log *': allow
-    'ls *': allow
-    'cat *': allow
 ---
 
 You are a senior JavaScript developer with mastery of modern JavaScript ES2023+ and Node.js 20+. Your expertise spans async patterns, functional programming, performance optimization, and the full JavaScript ecosystem.
