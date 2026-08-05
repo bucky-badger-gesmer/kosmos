@@ -20,7 +20,6 @@ kosmos/
 ├── .opencode/
 │   ├── agents/         # Specialized AI agents
 │   ├── commands/       # Slash commands for workflows
-│   ├── plugins/        # Platform plugins (freebuff)
 │   └── skills/         # Domain-specific skill modules
 ├── .vscode/            # VS Code settings and extensions
 ├── node_modules/       # Dependencies
@@ -66,29 +65,10 @@ Before setting up, make sure you have the following installed:
 
 Kosmos is built on the [OpenCode](https://opencode.ai) platform with the following setup:
 
-| Component  | Configuration                              |
-| ---------- | ------------------------------------------ |
-| Main Model | `opencode-go/kimi-k2.5`                    |
-| Plan Agent | `opencode-go/glm-5.1`                      |
-| Plugin     | `freebuff.mjs` (multi-model AI delegation) |
-
-### Plugins
-
-**Freebuff Integration**
-
-The freebuff plugin provides multi-model AI support:
-
-- Claude, GPT, Qwen, and DeepSeek models
-- File analysis and code review capabilities
-- Task delegation for complex workflows
-
-Configured in `opencode.json`:
-
-```json
-{
-  "plugin": [".opencode/plugins/freebuff.mjs"]
-}
-```
+| Component  | Configuration            |
+| ---------- | ------------------------ |
+| Main Model | `opencode-go/kimi-k2.5`  |
+| Plan Agent | `opencode-go/glm-5.1`    |
 
 ## Platform Features
 

@@ -27,11 +27,6 @@ related_projects: [other-file-names]
 
 - **Main model:** `opencode-go/kimi-k2.5`
 - **Plan agent:** `opencode-go/glm-5.1`
-- **Plugin:** `.opencode/plugins/freebuff.mjs` (free AI delegation via Codebuff SDK)
-
-## Commands
-
-`.opencode/commands/` — Development and workflow slash commands. See `.opencode/commands/README.md` for full list.
 
 ## Skills
 
@@ -40,16 +35,6 @@ related_projects: [other-file-names]
 ## Agents
 
 `.opencode/agents/` — Organized by role (delegation, development, analysis). See `.opencode/agents/README.md` for full list.
-
-## Freebuff Plugin
-
-Delegates tasks to a free AI model (GLM-5.1) via the `@codebuff/sdk`. Requires:
-
-- Login: Run `freebuff login` in terminal first
-- Credentials at: `~/.config/manicode/credentials.json`
-- If not logged in: "freebuff is not logged in"
-
-**Key behavior:** Freebuff is read-only. It proposes file changes as structured text (FILE/ACTION/SEARCH/REPLACE). The calling model applies the changes using its own write tools, which prompts the user for permission.
 
 ## Workflow & Principles
 
@@ -64,7 +49,6 @@ Delegates tasks to a free AI model (GLM-5.1) via the `@codebuff/sdk`. Requires:
 - Use subagents to keep the main context window clean.
 - Offload research, exploration, and parallel analysis to subagents.
 - For complex problems, spin up multiple subagents. One task per subagent.
-- Use freebuff for tasks where free tokens matter more than speed.
 - Focused execution over cluttered multitasking.
 
 ### 3. Self-improvement loop
@@ -117,7 +101,7 @@ Delegates tasks to a free AI model (GLM-5.1) via the `@codebuff/sdk`. Requires:
 
 **EditorConfig**: LF line endings, UTF-8, 2-space indent for JSON/YAML/SH.
 
-**Commits**: Use `/commit` command for conventional commits.
+**Commits**: Use the `commit` skill for conventional commits.
 
 ## Environment
 
@@ -134,4 +118,4 @@ Delegates tasks to a free AI model (GLM-5.1) via the `@codebuff/sdk`. Requires:
 
 - Skill creation guide: `.opencode/skills/skill-creator/SKILL.md`
 - JSON schemas: `.opencode/skills/skill-creator/references/schemas.md`
-- Commit command: `.opencode/commands/commit.md`
+- Commit skill: `.opencode/skills/commit/SKILL.md`
