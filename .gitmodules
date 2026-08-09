@@ -7,3 +7,6 @@
 [submodule "repositories/aws-saa-practice-app"]
 	path = repositories/aws-saa-practice-app
 	url = git@github.com:bucky-badger-gesmer/aws-saa-practice-app.git
+[submodule "repositories/cloud-computing-notes"]
+	path = repositories/cloud-computing-notes
+	url = git@github.com:bucky-badger-gesmer/cloud-computing-notes.git
