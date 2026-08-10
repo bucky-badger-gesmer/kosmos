@@ -16,12 +16,12 @@ related_projects: [2026-08-05-rds-multiaz-read-replica-assignment.project.md, 20
 
 Extends the previous café application assignment by making the infrastructure **highly scalable and reliable**. The deliverable is the architecture in the assignment diagram: a 2-AZ VPC with public subnets (ALB + NAT gateways) and private subnets (Auto Scaling group of café app servers + Multi-AZ RDS), built via launch template, ASG, and load balancer, then verified with a real load test. **The walkthrough below is the deliverable; the Canvas report is handled by Aaron** (per assignment: step-by-step instructions + citations).
 
-Scope: write-up first, then hands-on run. Console walkthrough in **us-east-1**. Assumes the previous assignment exists (café web app instance running on port 80, Amazon Linux, a saved key pair). Prerequisites VPC resources are **free**; runtime resources (2 NAT gateways ≈ $65/mo, ALB ≈ $17/mo, 2–4 `t2.micro` ≈ $17–34/mo, Multi-AZ RDS ≈ $38/mo) accrue hourly — stop/delete after the lab (see Teardown).
+Scope: write-up first, then hands-on run. Console walkthrough in **us-east-1**. The previous assignment's instance and AMI were removed per teardown, so the golden image is **rebuilt from scratch** (Phase 2) from the café app source; a saved key pair is still assumed. Prerequisites VPC resources are **free**; runtime resources (2 NAT gateways ≈ $65/mo, ALB ≈ $17/mo, 2–4 `t2.micro` ≈ $17–34/mo, Multi-AZ RDS ≈ $38/mo) accrue hourly — stop/delete after the lab (see Teardown).
 
 ## Requirements
 
 - [ ] **Infrastructure as depicted:** VPC `10.0.0.0/16`, 2 public subnets (with NAT gateways), 4 private subnets (2 app + 2 DB), IGW, ALB, Multi-AZ RDS
-- [ ] **AMI:** golden image created from the previous assignment's café instance
+- [ ] **AMI:** golden image built from the café app source (original instance + AMI removed per teardown — rebuilt in Phase 2)
 - [ ] **Launch template:** AMI, instance type, key pair, app security group
 - [ ] **Auto Scaling group:** spans both app subnets (2 AZs), min 2 / desired 2 / max 4, attached to the ALB target group, CPU-based scaling policy
 - [ ] **Load balancer:** internet-facing ALB in both public subnets, listener → target group → ASG instances
@@ -51,6 +51,7 @@ VPC 10.0.0.0/16 · AZ A (subnets .0/.2/.4) · AZ B (subnets .1/.3/.5)
 
 1. VPC → **Your VPCs** → **Create VPC** → `VPC only` | Name: `elast-vpc` | IPv4 CIDR: `10.0.0.0/16` → **Create VPC**.
 2. Select `elast-vpc` → **Actions** → **Edit VPC settings** → check **Enable DNS hostnames** → **Save**.
+   - ⚠️ Do this **immediately** — it's easy to skip and everything later (ALB DNS name, RDS endpoints) depends on it.
 
 **2. Subnets** (VPC → **Subnets** → **Create subnet**, VPC: `elast-vpc`) — six `/24`s exactly as the diagram:
 
@@ -63,6 +64,11 @@ VPC 10.0.0.0/16 · AZ A (subnets .0/.2/.4) · AZ B (subnets .1/.3/.5)
 | `priv-db-subnet-a` | `10.0.4.0/24` | `us-east-1a` |
 | `priv-db-subnet-b` | `10.0.5.0/24` | `us-east-1b` |
 
+**You must create all 6 subnets** (one per row below — the "Subnet name" field is the subnet's Name tag). Two ways, same result:
+
+- **One form, 6 rows (fastest):** fill the first row (name / AZ / CIDR), click **Add new subnet** to add another row, repeat until all 6 rows exist, then click the final **Create subnet** button at the bottom. (Clicking "Add new subnet" does **not** create anything yet — only the final **Create subnet** button does.)
+- **Or one at a time:** fill a single row, click **Create subnet**, repeat 6×.
+
 (Check the AZs available to your account — the assignment only requires one AZ per subnet pair; substitute if `us-east-1b` is unavailable.)
 
 **3. Internet gateway**
@@ -74,31 +80,69 @@ VPC 10.0.0.0/16 · AZ A (subnets .0/.2/.4) · AZ B (subnets .1/.3/.5)
 
 1. EC2 → **Elastic IPs** → **Allocate Elastic IP address** → **Allocate** → name `elast-eip-a`. Repeat for `elast-eip-b`.
 2. VPC → **NAT gateways** → **Create NAT gateway**:
+   - **Availability mode: `Zonal`** ← required for this lab. Zonal pins the NAT to one subnet, matching the diagram's one-NAT-per-AZ (and the route-table split below). Do **not** use `Regional` — that's a single gateway serving the whole VPC: cheaper (~half the NAT cost) but off-diagram, one EIP, a single point of failure, and the console hides the Subnet field when it's selected.
    - Name: `elast-nat-a` | Subnet: `pub-subnet-a` | Connectivity type: `Public` | Elastic IP: `elast-eip-a` → **Create NAT gateway**.
    - Name: `elast-nat-b` | Subnet: `pub-subnet-b` | Connectivity type: `Public` | Elastic IP: `elast-eip-b` → **Create NAT gateway**.
 3. Wait for both to show **Available** (~2 min). ⚠️ Each NAT gateway is ≈ $0.045/hr ($32/mo) — this is the biggest cost in the lab, and **why we use two only for the app subnets** (RDS backups go out via the free S3 gateway endpoint, Phase 4).
 4. Note the NAT gateway IDs for the route tables below.
 
-**5. Route tables** (VPC → **Route Tables** → **Create route table**, VPC: `elast-vpc`)
+**5. Route tables** (VPC → **Route Tables** → **Create route table**, VPC: `elast-vpc`) — create three, using the exact names (they appear in your report; a typo like `elast-rt-rt-public` works functionally but looks wrong in the deliverable):
 
-| Name | Route added | Subnet associations |
+| Name | Route to add | Subnets to associate |
 |---|---|---|
 | `elast-rt-public` | `0.0.0.0/0` → **Internet Gateway** `elast-igw` | `pub-subnet-a`, `pub-subnet-b` |
 | `elast-rt-app-a` | `0.0.0.0/0` → NAT gateway `elast-nat-a` | `priv-app-subnet-a` |
 | `elast-rt-app-b` | `0.0.0.0/0` → NAT gateway `elast-nat-b` | `priv-app-subnet-b` |
 
+For **each** route table, two separate actions are required — doing only one silently breaks the lab:
+
+1. **Add the route:** select the RT → **Routes** tab → **Edit routes** → **Add route** → Destination `0.0.0.0/0`, Target = the IGW / NAT gateway from the table → **Save changes**.
+2. **Associate the subnets:** **Subnet associations** tab → **Edit subnet associations** → check the subnets → **Save associations**.
+
 - **DB subnets** stay on the **main route table** (local-only) — private, no internet route (RDS is AWS-managed and needs none).
-- For each RT: **Subnet associations** tab → **Edit subnet associations** → check the subnets → **Save associations** ← required; the main route table only routes local traffic.
-- **Verify:** Routes tab shows the `0.0.0.0/0` row with the IGW / NAT gateway ID as target, and subnet associations list the right subnets.
+- **Verify each RT:** the Routes tab shows the `0.0.0.0/0` row with the IGW / NAT gateway ID as target **and** the Subnet associations tab lists the right subnets. (Most common miss in a live run: the route — the RT is created and associated but no `0.0.0.0/0` is added, so the subnets stay local-only and private instances silently have no internet: `dnf` hangs, SSH times out.)
 
-### Phase 2 — AMI from the previous assignment's instance
+**✅ Phase 1 completion checklist** — all must be true before Phase 2:
 
-1. EC2 → **Instances** → select the café web app instance from the previous assignment (must be **running** and the app verified on port 80).
-2. **Actions** → **Image and templates** → **Create image**:
+- [ ] DNS hostnames **Enabled** on `elast-vpc` (VPC → Actions → Edit VPC settings)
+- [ ] 6 subnets exist with the exact names/CIDRs/AZs (VPC → Subnets → search `elast-vpc`)
+- [ ] `elast-igw` attached to `elast-vpc` (Internet Gateways → attachment column)
+- [ ] `elast-nat-a` + `elast-nat-b` both `Available`, each with its EIP
+- [ ] All 3 route tables show the `0.0.0.0/0` row with the right target, and the right subnet associations
+
+### Phase 2 — Build the golden AMI from scratch
+
+> The previous assignment's café instance **and** its AMI were deleted in teardown (as instructed), so the golden image is rebuilt from the café app source (`static-website`, the class's static HTML/CSS site). Build it once; Phase 5's launch template consumes the image exactly as the original plan intended.
+
+1. (Optional sanity check) EC2 → **AMIs** / **Snapshots** / **Instances** — confirm no old café image remains before rebuilding.
+2. EC2 → **Instances** → **Launch instances** — the temporary build instance:
+
+   | Field | Value |
+   |---|---|
+   | Name | `cafe-build` |
+   | AMI | **Amazon Linux 2023** (Free tier eligible) |
+   | Instance type | `t2.micro` |
+   | Key pair | your existing key pair (e.g. `summer-2026`) |
+   | Network → VPC / Subnet | `elast-vpc` → `pub-subnet-a` |
+   | Auto-assign public IP | **Enable** (needs the Phase 1 public route — done) |
+   | Firewall | create SG `build-sg` with **SSH from your IP `/32`** only (temporary — deleted in teardown) |
+
+   → **Launch instance**, wait for `2/2 checks passed`. Note the public IP.
+3. Install the web server and deploy the café site (from your workstation):
+   ```bash
+   scp -i ~/.ssh/<key>.pem -r /Users/agesmer/Downloads/static-website/* ec2-user@<build-public-ip>:/tmp/
+   ssh -i ~/.ssh/<key>.pem ec2-user@<build-public-ip>
+   sudo dnf install -y httpd
+   sudo systemctl enable --now httpd
+   sudo cp -r /tmp/index.html /tmp/css /tmp/images /var/www/html/
+   curl localhost     # → "Welcome to the Café!" (port 80 verified)
+   ```
+4. **Actions** → **Image and templates** → **Create image**:
    - Image name: `cafe-app-ami` | Image description: `café app server, port 80, Amazon Linux`
    - (Optional) **Instance reboot:** `No reboot` if you want zero downtime (slightly less consistent image).
-3. EC2 → **AMIs** → wait for state `available` (2–5 min).
-   - ⚠️ This AMI is the basis of the launch template — if the app isn't on port 80 in this image, none of the later health checks will pass. If the previous instance was lost, launch a fresh instance from the old AMI, install the app, then create the image from *that*.
+5. EC2 → **AMIs** → wait for state `available` (2–5 min).
+   - ⚠️ This AMI is the basis of the launch template — if the app isn't on port 80 in this image, none of the later health checks will pass.
+6. **Terminate `cafe-build`** — it has served its purpose; only the AMI matters. (A stopped `t2.micro` costs ~$0.01/hr, so don't leave it running.)
 
 ### Phase 3 — Security groups (EC2 → **Security groups** → **Create security group**)
 
@@ -117,7 +161,7 @@ VPC 10.0.0.0/16 · AZ A (subnets .0/.2/.4) · AZ B (subnets .1/.3/.5)
 5. **Storage — fix the Production defaults** (they jump the estimate to ~$700/mo): **gp3** / **20 GiB** / **3000 IOPS**, storage autoscaling off.
 6. **Additional configuration → Backup:** keep automated backups ON, and add the **S3 gateway endpoint** so backups can upload without an internet route (VPC → **Endpoints** → **Create endpoint** → `com.amazonaws.us-east-1.s3` → gateway type → VPC `elast-vpc` → **route tables: the main route table** → Create). Backups are free of NAT charges this way.
 7. **Create database** → wait for `Available` (5–10 min). Full Multi-AZ verify/failover steps: see [[2026-08-05-rds-multiaz-read-replica-assignment.project.md]] Tutorial 1 (same procedure, this VPC).
-   - The app connects to the DB endpoint; seed the café data if the app needs it.
+   - The café app is a **static site** (no DB reads) — the database exists to satisfy the architecture; nothing to seed or wire. Only the SG chain matters (`elast-db-sg` ← `elast-app-sg` ← `elast-alb-sg`).
 
 ### Phase 5 — Launch template
 
@@ -218,6 +262,8 @@ EC2 → **Auto Scaling Groups** → **Create Auto Scaling group**:
 ## Progress
 
 - 2026-08-09: Project created from the assignment PDF (3 pages: extension brief, target architecture diagram, deliverables). Walkthrough drafted in phases 1–9 (VPC/IGW/NAT → AMI → SGs → RDS → launch template → ALB → ASG → app test → load test), matching the diagram's CIDR layout exactly; report marked as Aaron's part.
+- 2026-08-10: Phase 2 rewritten as a **from-scratch AMI build** — the previous assignment's café instance AND its AMI were deleted per teardown instructions, so the golden image is now rebuilt from the class's `static-website` source on a fresh Amazon Linux 2023 instance (`cafe-build` → `cafe-app-ami`). App confirmed static (no DB reads) → Phase 4 DB tier is architecture-only; scope note and requirement updated accordingly.
+- 2026-08-10: Phase 1 rewritten after a **live validation pass** on account 762760349846 — the failure points from the run are now encoded in the walkthrough: subnet form mechanics (6 rows via **Add new subnet**, "Subnet name" = Name tag), NAT **availability mode `Zonal`** (Regional explained as the off-diagram alternative), route tables split into two explicit actions (**add the route** + **associate subnets** — the route was missed live, leaving RTs local-only), exact-name callout (`elast-rt-rt-public` typo), DNS-hostnames emphasis, and a Phase 1 completion checklist. Phase 1 fully validated green after fixes.
 
 ## Review
 
@@ -225,6 +271,8 @@ EC2 → **Auto Scaling Groups** → **Create Auto Scaling group**:
 - Architecture follows the diagram exactly: `10.0.0.0/16` VPC, public subnets `.0`/`.1` (NAT each), app private subnets `.2`/`.3`, DB private subnets `.4`/`.5`, ALB in both public subnets, ASG in both app subnets, Multi-AZ RDS across both DB subnets.
 - Not yet validated live; expected-cost caveats and console gotchas (EIP billing, NAT cost, target-tracking stabilization, SG reference chains) called out inline.
 - Report for Canvas: pending Aaron.
+- 2026-08-10: Rebuild branch added — the original instance+AMI no longer exist (teardown), so Phase 2 now builds the golden image from the app source; everything downstream (launch template, ASG, ALB, tests) is unchanged. Not yet validated live.
+- 2026-08-10: Phase 1 validated live against account 762760349846 — all checklist items green (VPC, DNS hostnames, 6 subnets, IGW, 2 NATs + EIPs, 3 RTs with routes + associations, DB subnets on main RT). Walkthrough updated to encode the run's confusion points; Phases 2–9 left as-is (worked as written).
 
 ## Related
 
