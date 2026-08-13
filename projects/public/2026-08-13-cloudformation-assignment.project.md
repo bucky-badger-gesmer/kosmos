@@ -147,14 +147,11 @@ ssh -i ~/.ssh/lab-key.pem ec2-user@<bastion-ip>
 ssh-add ~/.ssh/lab-key.pem        # once — puts the key in the agent so BOTH hops use it
 ssh -J ec2-user@<bastion-ip> ec2-user@<private-ip>
 
-# 3. On the bastion — the sample page proves cfn-init completed (which itself required NAT)
-curl -s http://<private-ip> | grep Congratulations
-
-# 4. On the private server — reach the internet via NAT (tests the private route table + NAT)
+# 3. On the private server — reach the internet via NAT (tests the private route table + NAT)
 sudo yum check-update     # exit 0 or 100 (updates listed) = NAT egress working; read-only
 ```
 
-📸 Capture the terminal output of all four (plus the negative tests below) for the report.
+📸 Capture the terminal output of all three (plus the negative tests below) for the report.
 
 > Why `ssh-add` is needed: with `-J`, command-line `-i` applies **only to the final target**, not the jump host — so `ssh -i … -J …` sends your default keys to the bastion and fails with `Permission denied (publickey)`. Loading the key into the agent makes it available to both hops.
 
@@ -172,15 +169,16 @@ sudo yum check-update     # exit 0 or 100 (updates listed) = NAT egress working;
 | Attempt | Expected result |
 |---|---|
 | `ssh ec2-user@<private-ip>` from workstation (no jump) | timeout — private server has no public IP/route |
+| `curl http://<private-ip>` from the bastion | timeout — the private SG blocks HTTP (SSH-only) |
 | `ssh ec2-user@<bastion-ip>` from a different network (e.g. phone hotspot; optional) | timeout — bastion SG allows only `MyIp` |
 
 **✅ Verify checklist:**
 
 - [ ] Bastion SSH works from workstation
 - [ ] Bastion → private server SSH works (via `-J`)
-- [ ] `curl http://<private-ip>` from the bastion returns the sample page
+- [ ] Private server rejects HTTP from the bastion (SSH-only)
 - [ ] Private server `yum check-update` succeeds (NAT egress proven)
-- [ ] Both negative tests fail as expected
+- [ ] Negative tests fail as expected
 
 ### Step 7 — Tear down (stop the billing)
 
@@ -230,7 +228,7 @@ Reference for the report — what differs from the class originals (in `~/Downlo
 - New parameters `KeyPairName` + `MyIp` — the class file had no SSH access at all; parameterizing keeps the template reusable (no hardcoded IPs/keys). `AmazonLinuxAMIID` (SSM parameter, Session08 best practice) and `NetworkStackName` kept as-is.
 - New `BastionSecurityGroup` (SSH 22 from `MyIp` only) and `BastionHost` (t2.micro in the public subnet; public IP via the NIC's `AssociatePublicIpAddress: true`, the template's existing pattern).
 - `WebServerInstance` moved to the private subnet with three edits: `KeyName` added, `AssociatePublicIpAddress` → `false`, NIC subnet import → `${NetworkStackName}-PrivateSubnetID`. Its cfn-init/cfn-signal `CreationPolicy` was kept **deliberately**: installing httpd and signaling CloudFormation both need internet, so from the private subnet the stack only completes if the NAT path works — a built-in verification.
-- `WebServerSecurityGroup` ingress rewired: `22 ← BastionSecurityGroup` (SG-to-SG reference — "only traffic from instances carrying the bastion SG") and `80 ← 10.0.0.0/16` (VPC-internal only, so the bastion can curl the sample page).
+- `WebServerSecurityGroup` ingress rewired to be SSH-only: `22 ← BastionSecurityGroup` (SG-to-SG reference — "only traffic from instances carrying the bastion SG"). The original's `80 ← 10.0.0.0/16` rule was **removed** to match the assignment's "only accept SSH traffic from the bastion."
 - `DiskVolume` + `DiskMountPoint` **deleted** — not part of the assignment, 100 GB of paid gp2, and its `DeletionPolicy: Snapshot` would have left a paid snapshot behind after teardown.
 - `URL` output replaced by `BastionPublicIp` + `PrivateServerPrivateIp` (the server no longer has a public DNS name).
 
