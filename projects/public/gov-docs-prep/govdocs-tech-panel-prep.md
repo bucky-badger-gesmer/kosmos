@@ -85,6 +85,115 @@ export default function AlertsPanel({ customerId }: { customerId: string }) {
 
 **Deliberate trap:** `.filter().sort()` is *not* a state-mutation bug — `filter` returns a new array, so sorting it is safe. Calling `alerts.sort()` directly would be the bug. Knowing which one is real is the thing that reads as senior.
 
+**The fixed shape.** Every numbered finding above maps to a line here. Be able to sketch the effect and the `acknowledge` function from memory; the rest you can describe.
+
+```tsx
+// AlertsPanel.tsx
+import React, { useState, useEffect, useMemo } from 'react';
+
+type Severity = 'low' | 'medium' | 'high';                       // #2: a union, never rendered as HTML
+
+type Alert = {
+  id: string;
+  jurisdiction: string;
+  effectiveDate: string;
+  severity: Severity;
+  acknowledged: boolean;
+};
+
+type LoadState =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'success'; alerts: Alert[] };
+
+export default function AlertsPanel({ customerId }: { customerId: string }) {
+  const [state, setState] = useState<LoadState>({ status: 'loading' });  // #7: typed, no `any`
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const ctrl = new AbortController();                            // #5: cancel stale requests
+    setState({ status: 'loading' });
+
+    fetch(`/api/customers/${customerId}/alerts`, {                 // #1: no token in the URL;
+      signal: ctrl.signal,                                         //     auth via httpOnly cookie
+      credentials: 'include',                                      //     or an Authorization header
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);        // #6: check the status
+        return res.json() as Promise<{ alerts: Alert[] }>;
+      })
+      .then(data => setState({ status: 'success', alerts: data.alerts }))
+      .catch(err => {
+        if (err.name === 'AbortError') return;                     // cleanup ran, ignore
+        setState({ status: 'error', message: err.message });       // #6: loading can't stick
+      });
+
+    return () => ctrl.abort();                                     // #5: cleanup
+  }, [customerId]);                                                // #4: refetch on prop change
+
+  const visible = useMemo(() => {
+    if (state.status !== 'success') return [];
+    const q = query.toLowerCase();
+    return state.alerts
+      .filter(a => a.jurisdiction.toLowerCase().includes(q))
+      .sort((a, b) => new Date(a.effectiveDate).getTime() - new Date(b.effectiveDate).getTime()); // #8
+  }, [state, query]);
+
+  async function acknowledge(alert: Alert) {
+    if (state.status !== 'success') return;
+    const previous = state.alerts;
+
+    // #3: new array, new object, functional updater — optimistic
+    setState({
+      status: 'success',
+      alerts: previous.map(a => (a.id === alert.id ? { ...a, acknowledged: true } : a)),
+    });
+
+    try {
+      const res = await fetch(`/api/alerts/${alert.id}/ack`, { method: 'POST', credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch {
+      setState({ status: 'success', alerts: previous });           // nit: roll back, don't lie
+      // surface an error toast here
+    }
+  }
+
+  return (
+    <div>
+      <label htmlFor="alert-search">Filter by jurisdiction</label>
+      <input id="alert-search" value={query} onChange={e => setQuery(e.target.value)} />
+
+      {state.status === 'loading' && <span role="status">Loading…</span>}
+      {state.status === 'error' && <p role="alert">Couldn't load alerts: {state.message}</p>}
+
+      {state.status === 'success' && visible.length === 0 && <p>No alerts match.</p>}
+
+      <ul>
+        {visible.map(alert => (
+          <li key={alert.id}>                                       {/* nit: stable id, not index */}
+            <span className={`severity-${alert.severity}`}>{alert.severity}</span>  {/* #2: text */}
+            {alert.jurisdiction} — {alert.effectiveDate}
+            <button
+              type="button"                                         /* nit: a real button */
+              onClick={() => acknowledge(alert)}
+              disabled={alert.acknowledged}
+            >
+              {alert.acknowledged ? 'Acknowledged' : 'Acknowledge'}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+Three things to say while sketching it:
+
+- The `LoadState` union means loading, error, and success are mutually exclusive, so the permanent spinner from finding #6 cannot happen by construction. That is the same discriminated-union answer from the TypeScript questions, applied.
+- In production you would replace the effect with React Query (`useQuery` keyed on `customerId`, `useMutation` with `onMutate`/`onError` for the optimistic ack). Say that, then say you wrote it by hand here to show you know what the library is doing for you.
+- The `useMemo` is optional at this list size. It is there because `visible` is derived from state, and deriving during render is the point; if they push, agree it could be a plain `const`.
+
 ---
 
 ### Snippet B — Lambda + MongoDB
@@ -137,23 +246,103 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 - `alerts` is implicitly `any[]`.
 - Missing indexes are invisible here: ask what indexes exist on `alerts.jurisdiction`.
 
-The fixed shape, worth being able to sketch:
+**The fixed shape.** Every numbered finding maps to a tagged line. The connection lifecycle and the tenant check are the two parts to have from memory.
 
 ```ts
-const client = new MongoClient(process.env.MONGO_URI!, { maxPoolSize: 10 });
-const dbPromise = client.connect().then(c => c.db('compliance'));
+import { MongoClient, ObjectId, Db } from 'mongodb';
+import { APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 
-export const handler: APIGatewayProxyHandler = async (event) => {
-  try {
-    const db = await dbPromise;
-    const tenantId = event.requestContext.authorizer?.tenantId; // not from the query string
-    // ...single $in query, projection, limit
+// #1: module scope runs once per execution environment and is reused across warm
+//     invocations. Small pool because Lambda scales out and every environment gets its own.
+const client = new MongoClient(process.env.MONGO_URI!, { maxPoolSize: 10 });
+const dbPromise: Promise<Db> = client.connect().then(c => c.db('compliance'));
+
+type Alert = {
+  _id: ObjectId;
+  tenantId: string;
+  jurisdiction: string;
+  lawId: ObjectId;
+  severity: 'low' | 'medium' | 'high';
+  effectiveDate: Date;
+  acknowledged: boolean;
+};
+
+type Law = { _id: ObjectId; title: string; jurisdiction: string };
+
+const PAGE_SIZE = 100;
+
+function json(statusCode: number, body: unknown): APIGatewayProxyResult {
+  return { statusCode, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+}
+
+export const handler: APIGatewayProxyHandler = async (event, context) => {
+  const requestId = context.awsRequestId;                          // nit: correlation id for logs
+
+  try {                                                            // #3: nothing escapes as a 502
+    const db = await dbPromise;                                    // #1: reuse, never close()
+
+    // #2: identity comes from the authorizer, which already verified the token.
+    //     The query string is user input and can say anything.
+    const auth = event.requestContext.authorizer ?? {};
+    const tenantId: string | undefined = auth.tenantId;
+    if (!tenantId) return json(401, { error: 'Unauthorized' });
+
+    // #2 (variant): if a caller may legitimately view several customers, the URL can
+    //     *request* one, but the server checks it against an allowlist it trusts.
+    const requested = event.queryStringParameters?.customerId ?? tenantId;
+    const allowed: string[] = auth.allowedCustomerIds ? JSON.parse(auth.allowedCustomerIds) : [tenantId];
+    if (!allowed.includes(requested)) return json(403, { error: 'Forbidden' });
+
+    // #5: _id is an ObjectId in this collection, so cast — and treat a malformed id as
+    //     a client error rather than letting the constructor's throw become a 500.
+    if (!ObjectId.isValid(requested)) return json(400, { error: 'Invalid customerId' });
+    const customer = await db
+      .collection<{ _id: ObjectId; jurisdictions: string[] }>('customers')
+      .findOne({ _id: new ObjectId(requested) }, { projection: { jurisdictions: 1 } });
+
+    if (!customer) return json(404, { error: 'Customer not found' });      // #4: null check → 404
+
+    // #7: bounded. Page is a query param; default to page 1.
+    const page = Math.max(1, Number(event.queryStringParameters?.page ?? 1) || 1);
+
+    // #6: one query with $in replaces the per-jurisdiction loop; projection keeps the
+    //     payload small; sort + skip + limit bounds it. Index: { tenantId: 1, jurisdiction: 1, effectiveDate: -1 }.
+    const alerts = await db
+      .collection<Alert>('alerts')
+      .find({ tenantId: requested, jurisdiction: { $in: customer.jurisdictions } })
+      .project<Pick<Alert, '_id' | 'jurisdiction' | 'lawId' | 'severity' | 'effectiveDate' | 'acknowledged'>>({
+        jurisdiction: 1, lawId: 1, severity: 1, effectiveDate: 1, acknowledged: 1,
+      })
+      .sort({ effectiveDate: -1 })
+      .skip((page - 1) * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+      .toArray();
+
+    // #6: one batched lookup for the laws instead of one findOne per alert.
+    const lawIds = [...new Set(alerts.map(a => a.lawId.toHexString()))].map(id => new ObjectId(id));
+    const laws = await db
+      .collection<Law>('laws')
+      .find({ _id: { $in: lawIds } }, { projection: { title: 1, jurisdiction: 1 } })
+      .toArray();
+    const lawById = new Map(laws.map(l => [l._id.toHexString(), l]));
+
+    const enriched = alerts.map(a => ({ ...a, law: lawById.get(a.lawId.toHexString()) ?? null }));
+
+    return json(200, { alerts: enriched, page, pageSize: PAGE_SIZE });
   } catch (err) {
-    console.error({ msg: 'alerts.fetch.failed', err });
-    return { statusCode: 500, body: JSON.stringify({ error: 'Internal error' }) };
+    console.error(JSON.stringify({ msg: 'alerts.fetch.failed', requestId, err: String(err) }));  // #3 + nit
+    return json(500, { error: 'Internal error', requestId });
   }
 };
 ```
+
+Things to say while sketching it:
+
+- **Order of the guards matters.** 401 (no identity) → 403 (identity, wrong customer) → 400 (malformed id) → 404 (well-formed, not found). Each one is a different question, and the status code tells the client which question failed.
+- **Two queries instead of 600.** The `$in` on jurisdictions and the `$in` on law ids are the whole N+1 fix. An aggregation with `$lookup` would make it one query; say you would reach for that if the join gets more complex, and that two round trips is fine here.
+- **The `$in` list is unbounded too.** `customer.jurisdictions` could be large. If they push, say you would cap it or move the join into a `$lookup` so Mongo does the fan-out server-side.
+- **`skip` is fine to start.** It degrades at deep pages; the upgrade is a cursor on `(effectiveDate, _id)`. Name it, do not build it.
+- **What you did not fix on purpose.** `MONGO_URI` still comes from an env var. Ask where it is populated from (Secrets Manager or Parameter Store) rather than rewriting config in a review.
 
 ---
 

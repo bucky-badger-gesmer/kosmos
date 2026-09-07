@@ -28,7 +28,8 @@ The sections below follow this order. Work top to bottom; if you run out of time
 | Mon | `whiteboard-walkthrough.md` + tech-panel §3 | Read the worked notification system once. Then Scenario 2 or 3 on paper. | 45 min |
 | Mon | `react-typescript-review.md`, `mongodb-review.md`, `lambda-aws-review.md`, `js-async-http-fundamentals.md` | Read hardest-first for you. Self-check questions at the end of each; rewrite any answer over 45 seconds. | 90 min |
 | Mon eve | dress rehearsal | 60 min, timer, no notes, recorded: 20 min unseen snippet, 20 min ten random questions, 20 min whiteboard. | 60 min |
-| **Tue** | `basics-rapid-fire.md`, `frontend-fundamentals.md`, `tooling-review.md` | Self-check questions only. Open the section for anything that does not ring. | 45 min |
+| **Tue** | `fundamentals-and-gotchas.md` | Read straight through once. Mongo section slowly. Circle any gotcha you could not explain. | 40 min |
+| Tue | `basics-rapid-fire.md`, `frontend-fundamentals.md`, `tooling-review.md` | Self-check questions only. Open the section for anything that does not ring. | 45 min |
 | Tue | `culture-panel-prep.md` | Fill the STAR worksheet. Say each story once, two minutes. Pick your questions per interviewer. | 60 min |
 | Tue eve | stop tech | Light skim of this file's §6. Sleep. | |
 | **Wed am** | `cheat-sheet.md` | Read once, 30 minutes before. Nothing else. | 20 min |

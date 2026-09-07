@@ -33,6 +33,7 @@ Last year's format (per your memory): basic tech questions → walk through a La
 - **`tooling-review.md`** — Mantine, Playwright, Datadog, CI/CD, Git. All named in the JD, none in the prep doc. Low effort to review, easy signal to show.
 - **`culture-panel-prep.md`** — STAR stories mapped to their "Who You Are" list, plus questions to ask each interviewer.
 - **`master-summary.md`** — the whole folder in one file: every snippet's headline findings, all four whiteboard scenarios compressed, the warm-ups, every topic digest, culture stories, and questions to ask. Study from this when you don't want to open sixteen files.
+- **`fundamentals-and-gotchas.md`** — bird's-eye review of React, TypeScript, MongoDB (heaviest, with a plain-English tour of every aggregation stage), Lambda, and Git/GitHub: what each is, the concepts to have straight, and 12–15 classic gotchas per topic. Minimal code.
 - **`cheat-sheet.md`** — one page of the ~50 most-worth-having-fresh facts. Read this in the 30 minutes before you walk in — reactivation, not learning.
 
 ## What the JD tells us to weight

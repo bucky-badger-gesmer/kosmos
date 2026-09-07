@@ -45,6 +45,30 @@ Pick two. The reason has to be consistent with why you declined. If you declined
 
 ---
 
+## Your actual answer (drafted Sept 7)
+
+The facts: you were about to accept last year when Augeo offered a promotion the same week. Since then Augeo has had several rounds of layoffs and there is uncertainty at the leadership level. You want the culture and team at GovDocs.
+
+**The frame:** *I didn't say no to GovDocs. I said yes to something that no longer exists.* Lead with what pulls you here; the layoffs come second and get one factual sentence.
+
+> "Last year I was at the offer stage and was about to accept. The same week, Augeo offered me a promotion. I'd built a lot there and felt I owed it to that team to take it, so I did. That was the right call at the time and I don't regret it.
+>
+> Since then, two things happened. I grew into the role: ______________________ [one concrete thing the promotion gave you]. And Augeo went through several rounds of layoffs. I'm grateful for the projects I got to work on, but the team I said yes to is largely gone, and there's real uncertainty at the leadership level.
+>
+> What stuck with me the whole year was this team: the culture, the mentoring structure, a SaaS product still being shaped. That's what I want to be part of, and it's why I reached out again rather than just applying somewhere."
+
+**The follow-up they are thinking even if they don't ask: "What if Augeo counters again?"** Answer instantly and without hedging:
+
+> "They might. Last year the counter was a promotion at a company I believed in. Today there isn't a version of Augeo that changes my mind, because what I want isn't a title, it's this team and this product. I'm here to accept."
+
+**Rules while saying it**
+- "Layoffs" and "uncertainty at the leadership level" once each, factual, no adjectives, no named people.
+- Keep the gratitude line. It is what separates "considered choice" from "fleeing."
+- The promotion is a strength: you were valued and you honor commitments. Do not shrink from it.
+- Fill the blank. "I grew into the role" without a specific sounds like a year of standing still.
+
+---
+
 ## "What would make you say yes?"
 
 Answer this directly. You intend to accept, so do not be coy. Something like:
