@@ -19,6 +19,85 @@ Five topics, one file, minimal code. Each section is: what it is in one paragrap
 - **Error boundaries, portals, code splitting.** Boundary per route so one panel cannot blank the app. Portals for modals. `React.lazy` + `Suspense` for route bundles.
 - **Accessibility basics.** Real `<button>`s, labeled inputs, visible focus, not color alone, no server strings as HTML.
 
+### Worked example: a component that fetches data
+
+The shape to have in muscle memory. One component, one effect, three pieces of state, and a cleanup that cancels the request.
+
+```tsx
+import { useEffect, useState } from "react";
+
+type Document = { id: string; title: string; status: "draft" | "published" };
+
+type Props = { agencyId: string };
+
+export function DocumentList({ agencyId }: Props) {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/agencies/${agencyId}/documents`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        const data: Document[] = await res.json();
+        setDocuments(data);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => controller.abort();
+  }, [agencyId]);
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <p role="alert">{error}</p>;
+  if (documents.length === 0) return <p>No documents yet.</p>;
+
+  return (
+    <ul>
+      {documents.map((doc) => (
+        <li key={doc.id}>
+          {doc.title} <span>({doc.status})</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+**Why it is shaped this way.**
+- **Three states, not one.** `loading`, `error`, and `documents` are separate so every render can answer "what should the screen show right now?" without guessing. Render the failure and empty cases explicitly.
+- **The effect depends on `agencyId` only.** That is the one outside value it reads. Change the prop, the effect re-runs. Leave it out and the list silently stays on the old agency.
+- **Fetching happens in the effect, not in the body.** The component body runs on every render. An effect runs after commit and only when its deps change.
+- **Types come from a declared shape, not from `any`.** `await res.json()` returns `any`. Annotating `data` is the minimum; a runtime validator like Zod is the honest version.
+
+**The AbortController, step by step.**
+1. **Create one per effect run.** `new AbortController()` gives you two things: a `signal` you hand to `fetch`, and an `abort()` method you keep.
+2. **Pass the signal to `fetch`.** The browser now knows this request can be cancelled. Nothing is cancelled yet.
+3. **Return a cleanup that calls `abort()`.** React runs the cleanup right before the effect runs again and when the component unmounts. Both cases mean "the previous request no longer matters."
+4. **When `abort()` fires, the pending `fetch` rejects** with a `DOMException` whose `name` is `"AbortError"`. It lands in your `catch`, so you have to recognize it and return early. Otherwise a routine prop change paints an error message.
+5. **Guard the `finally`.** After an abort, the component may be unmounted or a newer request may be in flight. Setting `loading` to false there would be wrong either way, so check `controller.signal.aborted` first.
+
+**The race it prevents.** The user selects agency A, then quickly agency B. Without cleanup, both requests are live. If A's response arrives second, the screen shows A's documents under B's heading. With the controller, selecting B aborts A's request before B's effect starts, so A's response can never land.
+
+**Two things people mix up.**
+- **`abort()` does not stop your async function.** It rejects the pending `await`. Code after the `await` still runs, which is why the abort check lives in `catch` and the guard lives in `finally`.
+- **The `ignore` flag is the same idea without cancelling the network call.** `let ignore = false; ... if (!ignore) setDocuments(data); return () => { ignore = true; }`. It stops the stale write but the bytes still download. Reach for it when the thing you are awaiting is not a `fetch`.
+
+**Interview follow-up you should expect.** "Would you write this by hand in production?" Answer: no, this is what React Query or SWR wrap up, adding caching, dedup, and retries. But you should be able to write it, because it shows you understand what those libraries are doing for you.
+
 ### Classic gotchas
 1. **Mutating state and setting it back.** React compares by reference. Same reference means "nothing changed," no re-render. Always make a new object or array.
 2. **Missing dependency in `useEffect`.** The effect captured values from the render it ran in. Leave a prop out of the deps and the effect keeps using the old one forever. The lint rule exists because this bug is silent.
@@ -134,6 +213,71 @@ Field references inside stages are strings with a `$`: `'$jurisdiction'` means "
 - **Atlas** is the managed service. Connection limits per tier are why Lambda connection reuse matters.
 - **Change streams** let you subscribe to inserts and updates, the trigger for the notification-system whiteboard.
 
+### Worked example: a tiny data-access module
+
+The happy path with the Node driver. One client, one typed collection, one insert, one indexed read.
+
+```ts
+import { MongoClient, ObjectId } from "mongodb";
+
+type Alert = {
+  _id?: ObjectId;
+  tenantId: string;
+  jurisdiction: string;
+  title: string;
+  acknowledged: boolean;
+  effectiveDate: Date;
+};
+
+// 1. One client for the whole process. Construct once, connect lazily, never close per request.
+const client = new MongoClient(process.env.MONGODB_URI!);
+const alerts = client.db("govdocs").collection<Alert>("alerts");
+
+// 2. Run once at startup, not per query.
+export async function ensureIndexes() {
+  await alerts.createIndex({ tenantId: 1, acknowledged: 1, effectiveDate: -1 });
+}
+
+// 3. Write. insertOne returns the generated _id.
+export async function createAlert(input: Omit<Alert, "_id">) {
+  const result = await alerts.insertOne(input);
+  return result.insertedId;
+}
+
+// 4. Read. Filter, sort, limit, and project, all served by the index above.
+export async function listOpenAlerts(tenantId: string, limit = 50) {
+  return alerts
+    .find({ tenantId, acknowledged: false })
+    .sort({ effectiveDate: -1 })
+    .limit(limit)
+    .project<Pick<Alert, "_id" | "title" | "jurisdiction" | "effectiveDate">>({
+      title: 1,
+      jurisdiction: 1,
+      effectiveDate: 1,
+    })
+    .toArray();
+}
+
+// 5. Update with an operator, never a bare object.
+export async function acknowledgeAlert(tenantId: string, id: string) {
+  const result = await alerts.updateOne(
+    { _id: new ObjectId(id), tenantId },
+    { $set: { acknowledged: true } }
+  );
+  return result.matchedCount === 1;
+}
+```
+
+**Why it is shaped this way.**
+- **The client is module-level.** Constructing it is cheap; the connection pool it manages is not. The driver connects on first use, so there is no explicit `connect()` to forget.
+- **The collection is typed.** `collection<Alert>` gives you autocomplete on filters and catches a typo in a field name. It does not validate what is actually in the database. That is what a Zod parse or a JSON Schema validator on the collection is for.
+- **The index matches the query in ESR order.** Equality on `tenantId` and `acknowledged`, then the sort on `effectiveDate`. `explain()` on the read would show an `IXSCAN` with keys examined close to documents returned.
+- **Every operation carries `tenantId`.** Even the update by `_id` includes it, so a tenant cannot acknowledge another tenant's alert by guessing an id.
+- **`_id` is converted before the query.** The string from a URL is not an `ObjectId`. `new ObjectId(id)` throws on a malformed string, which is the right behavior; the caller turns that into a 400.
+- **`matchedCount`, not `modifiedCount`.** Acknowledging an already-acknowledged alert matches one document and modifies zero. That is still success.
+
+**Interview follow-up you should expect.** "Where does the aggregation pipeline come in?" Answer: the moment the question is about groups of documents rather than a list of them. "Open alerts per jurisdiction" is a `$match` then `$group`, and it starts from the same index as `listOpenAlerts`.
+
 ### Classic gotchas
 1. **`$match` late in the pipeline.** Only a `$match` at the start (or right after another `$match`/`$sort` the optimizer can move) uses indexes. A `$match` after `$lookup` joins the entire collection first. Filter first, always.
 2. **`_id` type mismatch.** Documents store `ObjectId`; you query with the string from a URL. Returns nothing, no error, looks like missing data. Convert with `new ObjectId(str)` (wrap it; it throws on bad input) or store string ids consistently.
@@ -169,6 +313,61 @@ Field references inside stages are strings with a `$`: `'$jurisdiction'` means "
 - **Permissions.** An execution role (IAM) says what the function may call. Least privilege. Secrets from Secrets Manager or Parameter Store, not hardcoded.
 - **Observability.** Structured JSON logs to CloudWatch with the request id. Metrics: invocations, errors, duration, throttles, concurrent executions. DLQ depth alarm. X-Ray or Datadog for traces across API Gateway → Lambda → database.
 - **Deploy.** Infrastructure as code (SAM, CDK, Serverless Framework, Terraform). Versions and aliases for safe rollouts.
+
+### Worked example: an API Gateway handler
+
+The happy path in TypeScript for the Node runtime. Module scope for the expensive things, a thin handler that parses, calls, and shapes the response.
+
+```ts
+import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { listOpenAlerts } from "./alerts"; // the MongoDB module above
+
+// 1. Module scope runs once per cold start. The Mongo client inside ./alerts lives here too.
+const DEFAULT_LIMIT = 50;
+
+export const handler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  // 2. Identity comes from the authorizer, never from the request.
+  const tenantId = event.requestContext.authorizer?.tenantId as string | undefined;
+  if (!tenantId) return json(401, { error: "Unauthorized" });
+
+  // 3. Parse and bound the input.
+  const requested = Number(event.queryStringParameters?.limit ?? DEFAULT_LIMIT);
+  const limit = Number.isFinite(requested) ? Math.min(requested, 200) : DEFAULT_LIMIT;
+
+  try {
+    // 4. Await the work. If you don't, the environment freezes with it in flight.
+    const alerts = await listOpenAlerts(tenantId, limit);
+    return json(200, { alerts });
+  } catch (err) {
+    // 5. Log with the correlation id, return a clean 500 instead of a 502.
+    console.error(JSON.stringify({ requestId: event.requestContext.requestId, err: String(err) }));
+    return json(500, { error: "Internal error" });
+  }
+};
+
+// 6. The proxy integration wants exactly this shape, with body as a string.
+function json(statusCode: number, body: unknown): APIGatewayProxyResult {
+  return {
+    statusCode,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
+}
+```
+
+**Why it is shaped this way.**
+- **Nothing expensive is created in the handler.** The database client comes from a module imported at the top, so it is constructed during init and reused across warm invocations. Nothing is closed at the end.
+- **The handler is `async` and returns a value.** That is the modern contract. No callback, no `context.done`. Lambda waits on the returned promise.
+- **`tenantId` comes from `requestContext.authorizer`.** A Cognito or custom authorizer put it there after verifying the token. A `tenantId` in the query string would be a request to impersonate someone.
+- **Input is bounded before it reaches the database.** The limit cap protects both the 6 MB response payload and the database.
+- **One `try`/`catch` around the work.** An uncaught throw is a 502 from API Gateway with a vague log line. Catching it lets you log structured context and control the status code.
+- **The response helper exists because the shape is easy to get wrong.** `body` must be a string. Returning an object there is the classic 502.
+
+**How it gets called.** API Gateway receives `GET /alerts?limit=20`, runs the authorizer, builds the `event`, and invokes the function synchronously. If no warm environment exists, Lambda downloads the bundle, starts Node, runs the module scope, then calls `handler`. The next request within a few minutes skips the first three steps.
+
+**Interview follow-up you should expect.** "What changes if this is triggered by SQS instead?" Answer: the `event` becomes `{ Records: [...] }`, there is no HTTP response to shape, the handler must be idempotent because SQS redelivers, and each record should be handled in its own `try`/`catch` so one bad message does not fail the batch.
 
 ### Classic gotchas
 1. **Creating the DB client inside the handler.** New TCP and TLS handshake every request, and under load the database runs out of connections. Client at module scope.
