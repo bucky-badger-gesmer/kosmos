@@ -10,3 +10,6 @@
 [submodule "repositories/cloud-computing-notes"]
 	path = repositories/cloud-computing-notes
 	url = git@github.com:bucky-badger-gesmer/cloud-computing-notes.git
+[submodule "repositories/ai-ethics"]
+	path = repositories/ai-ethics
+	url = git@github.com:bucky-badger-gesmer/ai-ethics.git
