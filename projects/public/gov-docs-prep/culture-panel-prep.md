@@ -98,42 +98,134 @@ For each story, one line per letter. Result must have a number or a concrete out
 
 ---
 
-## Questions to ask (Alex's 4:00 slot — but keep some for everyone)
+## Questions to ask — one list, by interviewer
 
-Asking sharp questions is scored. Tailor by interviewer:
+About 20 with backups. You will ask maybe 10 to 12. Pick based on what the conversation already covered; a question they just answered unprompted is worse than no question. Each one has a line on why it earns something and what to listen for, so you can judge the answer while they give it.
 
-Your personal question list (`personal/gov_docs_questions.md`) is merged in below. The strongest ones are marked.
+Two rules that apply to every panel:
 
-**For Alex (SWE Manager):**
-- What does the first 90 days look like? Is there a specific problem you're hiring this person to own? *(strong)*
-- How is the mentorship structured — how are mentors paired, what's the cadence?
-- How does the team balance the mature Posting Service with the new SaaS line — where would I spend most of my time?
-- What's the biggest piece of technical debt the team is carrying, and is there appetite to pay it down? *(strong)*
-- What separates someone who does well in this role from someone who struggles? *(strong)*
-- What do you enjoy about managing this team, and what's the hardest part of the job right now?
-- How is the team using AI tooling today: autocomplete, agents in CI, anything more autonomous? Are there guardrails given the compliance domain? *(you asked a version of this last year; asking again shows continuity)*
-- How has headcount trended over the last two years? *(this is your "any fears of layoffs" question, rephrased so it doesn't sound anxious)*
-- What are the next steps and timeline? *(always ask)*
-- Is there anything about my background you'd want me to expand on before we wrap? *(always ask, last)*
-
-**For Patrick & Ben (engineers):**
-- What does the front-end architecture look like today — how far along is the Mantine/React codebase? Which Mantine version?
-- What's the testing culture like — how much rides on Playwright / where are the gaps?
-- What's the most interesting technical problem the team is chewing on right now?
-- How does code get from a laptop to production: CI, review, deploy cadence, who's on call? *(strong, concrete)*
-- Where does this role sit between hands-on coding and technical leadership day to day?
-
-**For Nick (Data Eng):**
-- How is the jurisdictional/law-change data modeled and kept current? (shows you understand the core hard problem)
-- Where does data engineering hand off to product engineering?
-
-**For Dan (PM):**
-- How do product and engineering scope features together?
-- How do you decide what compliance capability to build next?
-- What's the relationship between engineering and the business side? Who decides what gets built? *(strong)*
-- How have you enjoyed your time here? *(simple, disarming, gets a real answer)*
+- **Ask about what changed since last year, not what the stack is.** You interviewed here. "What is your tech stack" says you forgot. "What changed" says you remembered and are still curious. Nobody else in the pipeline can ask that.
+- **Skip stock questions.** "How would you describe the culture" gets a brochure. Ask for a recent, specific example and you get the truth.
 
 ---
+
+### Patrick and Ben, engineers (2:00). Ask two or three. Leave a minute at the end of the hour for them.
+
+1. **Walk me through how a feature goes from an idea to running in production here. Where does it slow down?**
+   *Why:* One question covers planning, branching, review, CI, deploy, and release cadence, and the "where does it slow down" invites honesty.
+   *Listen for:* whether they name a bottleneck without hesitation. A team that knows its slow step is a team that is working on it. Follow up on whichever part they light up about.
+
+2. **What has changed in the codebase or the stack since about a year ago? Anything you migrated, adopted, or regretted?**
+   *Why:* Your returning-candidate angle. It also tells you whether the codebase is moving or static.
+   *Listen for:* "regretted." Engineers who can name a regret are the ones who will give you honest review comments.
+
+3. **What is the most interesting technical problem the team is chewing on right now?**
+   *Why:* Cheap to ask, tells you whether the work is interesting to *them*.
+   *Listen for:* a specific problem versus "keeping the lights on." Either is fine to hear, but you want to know which.
+
+4. **Backup: What happens when a production deploy goes wrong? Rollback, hotfix, who gets paged?**
+   *Why:* On-call and rollback tell you how mature the operations side is and whether you will be woken up.
+   *Listen for:* whether rollback is a button or a scramble.
+
+---
+
+### Nick (Data Eng Mgr) and Dan (PM), culture panel (3:00). Ask four or five, mixed product and culture. Aim at least one at each of them by name.
+
+**Product and data**
+
+5. **For Nick: How is the jurisdiction and law-change data modeled and kept current, and where does data engineering hand off to product engineering?**
+   *Why:* This is the sharp version of "how do you keep up with changing laws." It shows you understand their hard problem is jurisdictional variance over time, and it asks about the seam you would actually work on.
+   *Listen for:* whether the handoff is a clean contract or a source of friction. Friction there is where your cross-stack debugging story becomes relevant.
+
+6. **For Dan: How much does the roadmap move, and how does engineering input actually change it? Can you give an example where it did?**
+   *Why:* "Can engineers influence the roadmap" gets a yes from everyone. Asking for an example gets the truth.
+   *Listen for:* a real example with a name and an outcome. A pause followed by generalities means the answer is "rarely."
+
+7. **For Dan: How do you decide which compliance capability to build next? Customer pull, legal change, or strategy?**
+   *Why:* Shows you understand the business has three competing inputs and that the SaaS line is still being shaped.
+   *Listen for:* whether one input dominates. Pure customer pull means a feature factory; pure strategy means customers are not being heard.
+
+8. **Backup: Can engineers push on UX and product decisions, or is that owned elsewhere?**
+   *Why:* The JD says "shaping how users experience our product." Check that it is true.
+
+**Culture**
+
+9. **Tell me about a recent disagreement on the team, technical or product, and how it got resolved.**
+   *Why:* The single best culture question. You learn whether conflict is surfaced or buried and who decides.
+   *Listen for:* a specific story, who made the final call, and whether the person who lost the argument is described with respect.
+
+10. **How does feedback work here day to day? Not the annual review, the Tuesday kind.**
+    *Why:* Coachability is what they are hiring for. Asking how they give feedback signals you want it, and tells you whether review comments and retros are honest.
+    *Listen for:* concrete mechanisms: PR review norms, retros, one-on-ones. "We're pretty informal" with nothing behind it is a yellow flag.
+
+11. **When something breaks in production, what does the conversation afterward look like?**
+    *Why:* Blameless or blame. Nick can talk about data incidents, Dan about customer impact, so it works for both.
+    *Listen for:* the word "postmortem" or "retro," and whether the story is about the system or about a person.
+
+12. **What does a normal week look like on this team? Office days, meetings, focus time.**
+    *Why:* This is the work-life-balance question in a form that sounds like planning rather than negotiating. The hybrid model is in the JD; find out what it means in practice.
+    *Listen for:* a clear answer. Vagueness about office days means it is still being figured out.
+
+13. **Backup: What is one thing about how the team works that a new person is usually surprised by?**
+    *Why:* Disarming, gets a real answer, works for anyone.
+
+14. **Closer, for either: What do you personally enjoy about working here?**
+    *Why:* Simple, and people like answering it. Ends the panel warm.
+
+---
+
+### Alex (SWE Manager), 4:00 to 4:30. This is the real conversation. Ask six or seven, and do the three closing moves from `returning-candidate.md`.
+
+15. **What would success look like at 90 days? Is there a specific problem you are hiring this person to own?**
+    *Why:* Your strongest question. It tells you whether there is a real plan for the role and gives you the target to aim your close at.
+    *Listen for:* a specific problem or project. "Get up to speed and start taking tickets" means the role is generic; that is fine, but know it.
+
+16. **How is mentorship structured? Who would I be paired with, and what is the cadence?**
+    *Why:* The JD promises a dedicated mentor. Find out whether that is a person and a schedule or an aspiration.
+    *Listen for:* a name or a role and a cadence. If Alex can say "you'd pair with Ben, weekly," it is real.
+
+17. **You mentioned last year that AI tooling is encouraged. How has that evolved? Are there guardrails given the compliance domain?**
+    *Why:* Continuity is a returning-candidate advantage. It also bridges to your agent work if they ask what you have been doing.
+    *Listen for:* whether there is a policy or just permission. In a compliance product, "no guardrails" is itself informative.
+
+18. **Where would I spend most of my time: the mature Posting Service or the new SaaS line?**
+    *Why:* The two lines are different jobs. One is maintenance of a product 20% of the Fortune 500 relies on; the other is greenfield. Know which you are signing up for.
+    *Listen for:* a straight answer. Also note which one Alex sounds more excited about.
+
+19. **What separates someone who does well in this role from someone who struggles?**
+    *Why:* Gets Alex to describe the actual success criteria, which are rarely in the JD.
+    *Listen for:* anything that matches a weakness you have. If it does, that is your cue for the "anything about my background" question at the end.
+
+20. **How do you like to work with the people who report to you? One-on-one cadence, and how you handle someone who is stuck.**
+    *Why:* You are interviewing your manager. The mentored-role framing makes this natural rather than presumptuous.
+    *Listen for:* whether "stuck" gets a supportive answer or an impatient one.
+
+21. **If you could change one thing about the engineering process, what would it be?**
+    *Why:* Managers almost always answer this honestly, and it tells you what you will be living with.
+    *Listen for:* whether it is something you could help fix. If so, say so.
+
+22. **Backup: How has headcount on the engineering team trended over the last two years?**
+    *Why:* Your "any fears of layoffs" question, phrased so it does not sound anxious.
+
+**Always last, in this order:**
+
+23. **What are the next steps, and when do you expect to decide?**
+
+24. **Is there anything about my background you would want me to expand on before we wrap?**
+    *Why:* Gives Alex a chance to raise a doubt while you can still answer it. Pair it with the statement of intent from `returning-candidate.md`: you are very interested and would accept at the right number.
+
+---
+
+### Cut from earlier drafts, and why
+
+So you do not second-guess yourself in the room:
+
+- *Where do you see GovDocs in 5 years.* Too big for anyone in the room.
+- *How does GovDocs keep up with changing labor laws.* It is their whole business; sounds unresearched. Question 5 is the sharp version.
+- *Current tech stack, Next.js, state management, Mongo as non-relational.* You know the stack. The Mongo one implies it needs defending.
+- *Work-life balance.* Question 12 gets the signal without the flag.
+- *Hackathons, documentation tools, task management.* Day-two information.
+- *Five separate process questions (CI/CD, code review, branch to prod, consistency, idea to delivery).* Merged into question 1.
 
 ## Logistics & mindset
 
