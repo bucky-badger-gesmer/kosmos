@@ -10,3 +10,6 @@
 [submodule "repositories/ai-driven-cloud-infrastructure"]
 	path = repositories/ai-driven-cloud-infrastructure
 	url = git@github.com:bucky-badger-gesmer/ai-driven-cloud-infrastructure.git
+[submodule "repositories/seis616-corpweb"]
+	path = repositories/seis616-corpweb
+	url = git@github.com:bucky-badger-gesmer/seis616-corpweb.git
