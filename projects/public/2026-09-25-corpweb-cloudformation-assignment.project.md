@@ -31,7 +31,7 @@ Build `corpweb.json` for the "engineering manager": one CloudFormation **JSON** 
 - **Assignment:** `repositories/ai-driven-cloud-infrastructure/assignments/HW - CloudFormation.pdf`
 - **AWS account:** **762760349846**, CLI profile `aaron@gesm4267` (always pass `--profile aaron@gesm4267`; the `default` profile is a different account, 908027408892)
 - **Submission repo:** `repositories/seis616-corpweb/` → https://github.com/bucky-badger-gesmer/seis616-corpweb (public; must contain **only** `corpweb.json`)
-- **Report:** `repositories/ai-driven-cloud-infrastructure/assignments/hw-cloudformation-report.md` (kept out of the submission repo)
+- **Report:** `README.md` in the submission repo (raw evidence logs in `repositories/ai-driven-cloud-infrastructure/assignments/hw-cloudformation-evidence/`)
 
 **Architecture:**
 
@@ -144,8 +144,8 @@ Save every command + output to the report (`hw-cloudformation-report.md`).
 
 ### Phase 6: Report and submit
 
-- [ ] Report: overview, template design (requirement → resource table), the two decisions (IAM role, IMDS) and why, deploy log incl. any failed launches and fixes, verification commands + outputs, teardown evidence, note that launching needs `CAPABILITY_IAM`
-- [ ] Export to PDF/DOCX if Canvas needs a file
+- [x] Report written as the submission repo's `README.md` (template overview, requirement → resource table, design decisions, 11-step verification with command outputs, teardown). Public IP masked as `x.x.x.x`
+- [x] ~~Export to PDF/DOCX~~ not needed (report lives in the repo README)
 - [ ] Canvas: submit `https://github.com/bucky-badger-gesmer/seis616-corpweb` + report
 - [ ] Commit report in `ai-driven-cloud-infrastructure`; bump submodule pointers in kosmos
 
@@ -163,6 +163,7 @@ Save every command + output to the report (`hw-cloudformation-report.md`).
 - 2026-09-25: **Phase 4 done in 762760349846** — log at `repositories/ai-driven-cloud-infrastructure/assignments/hw-cloudformation-evidence/verification-log.md` (+ `stack-events.json`). All 18 resources `CREATE_COMPLETE`; VPC/subnets/route/SG/ALB/listener/target group exactly per spec; web1 `i-0ae4ac42201d170fc` (us-east-1a, 3.235.150.34) / web2 `i-06563224368a9fe7b` (us-east-1b, 44.211.147.153), t2.micro, AL2023, key `lab-key`; both targets healthy; `GET /` 200; 20 requests split **11 / 9**. **SSH with `lab-key.pem` succeeded on both instances** — `httpd` active, `index.php` present (proves the S3 role worked), local page shows each instance's own ID. Only the optional browser screenshot remains. **Stack live and billing until Phase 5.**
 - 2026-09-25: Browser check of the WebUrl confirmed working by Aaron.
 - 2026-09-25: **Phase 5 done** — deleted `WebserversDev` from 762760349846 at 19:52:24 UTC → `DELETE_COMPLETE` (~1.5 min). Confirmed gone: stack, both instances `terminated`, `EngineeringLB`, `EngineeringWebservers`, `EngineeringVpc`, `WebserversSG`, IAM role; WebUrl no longer resolves (curl exit 6). Log: `hw-cloudformation-evidence/teardown-log.md`. `lab-key` key pair kept (no cost). **Nothing billable left from this assignment in either account.**
+- 2026-09-25: **Report published** — `README.md` committed + pushed to `seis616-corpweb` (`46d0827`); repo is public and contains `README.md` + `corpweb.json`; `corpweb.json` on GitHub still SHA-256 `f45631bd…45f1` (the tested file). Public IP masked as `x.x.x.x` in README, evidence logs, and this file. Evidence logs committed in `ai-driven-cloud-infrastructure` (`9167178`, not yet pushed). Post-teardown sweep: all 17 regions in both 762760349846 and 908027408892 have no EC2 instances, load balancers, NAT gateways, EIPs, EBS volumes, or live stacks. Remaining: Canvas submission.
 
 ## Review
 
