@@ -13,3 +13,6 @@
 [submodule "repositories/seis616-corpweb"]
 	path = repositories/seis616-corpweb
 	url = git@github.com:bucky-badger-gesmer/seis616-corpweb.git
+[submodule "repositories/plate-and-plate"]
+	path = repositories/plate-and-plate
+	url = git@github.com:bucky-badger-gesmer/plate-and-plate.git
