@@ -29,9 +29,9 @@ Stack: Next.js (App Router, TypeScript, PWA) on Vercel, with Supabase for Postgr
 
 ### Phase 1: Data
 
-- [ ] Parse the workout and meal-plan PDFs into seed JSON, and review it by hand
-- [ ] Build the `foods` table with kcal and macros per unit
-- [ ] Confirm the computed kcal for each meal version matches the estimates in the spec (within about 5%)
+- [x] Parse the workout and meal-plan PDFs into seed JSON, and review it by hand
+- [x] Build the `foods` table with kcal and macros per unit
+- [x] Confirm the computed kcal for each meal version matches the estimates in the spec (within about 5%)
 
 ### Phase 2: Scaffold
 
@@ -40,7 +40,7 @@ Stack: Next.js (App Router, TypeScript, PWA) on Vercel, with Supabase for Postgr
 - [x] Magic-link sign-in for a single user
 - [x] Link the Supabase project, run `db push`, generate types
 - [x] Magic-link sign-in tested end to end by Aaron. Row-level security confirmed: without sign-in, reads return nothing and inserts are rejected
-- [ ] Load the seed data
+- [x] Load the seed data
 
 ### Phase 3: Today plus logging
 
@@ -67,8 +67,25 @@ Stack: Next.js (App Router, TypeScript, PWA) on Vercel, with Supabase for Postgr
   - The initial migration creates 13 tables, each with owner-only row-level security.
   - Sign-in is magic link only, with no self-signup. `src/proxy.ts` refreshes the session (Next 16 renamed middleware to proxy).
   - PDF text extraction moved from a Swift script to Python with `pdfplumber`, which was already installed and extracts more cleanly.
+- 2026-09-28: Phase 1 done.
+  - PDFs parsed into seed JSON (`npm run seed:build`).
+  - Second migration adds undated plan templates, whole-meal variants (the coach's "Option #2"), a calorie/macro totals view, and clone functions.
+  - Seeded the coach templates plus a starting meal plan and program dated 2026-09-28.
 
 ## Review
+
+### Phase 1 data (2026-09-28)
+
+- Workout parser: 9 programs and 277 prescriptions, with a 130-exercise library. Name variants are merged, and the extra words become notes.
+  - Checked by hand: one 2021 month and the latest 2024 Monday, line for line against the source text.
+  - One ambiguous rest note was settled by its position on the PDF page.
+- Meal parser: 10 coach versions, built from a hand-checked catalog of 50 foods. Any bullet line not in the catalog stops the parser.
+  - Calculated totals come within 1.5% of the spec's estimates.
+- Database: counts match the JSON.
+  - 307 program rows: 277 parsed plus 30 copied into the current program.
+  - The totals view agrees with the Python calculation to within 1 kcal.
+  - The Supabase security advisor flags nothing on the tables, view, or functions.
+- Bug found: the first seed run failed because a plpgsql variable shared a name with a table alias. The block rolled back cleanly, and the variables are now all prefixed.
 
 ### Phase 2 scaffold (2026-09-28)
 
