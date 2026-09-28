@@ -44,9 +44,9 @@ Stack: Next.js (App Router, TypeScript, PWA) on Vercel, with Supabase for Postgr
 
 ### Phase 3: Today plus logging
 
-- [ ] Today view: workout for today's weekday and the active meal version (ceiling, protein floor, cardio)
-- [ ] Daily log: weight (required), steps, cardio, water, sleep
-- [ ] Meal checkboxes, plus quick kcal/protein entry when off plan
+- [x] Today view: workout for today's weekday and the active meal version (ceiling, protein floor, cardio)
+- [x] Daily log: weight (required), steps, cardio, water, sleep
+- [x] Meal checkboxes, plus quick kcal/protein entry when off plan
 - [ ] Set logging with last time's weights and a suggestion to add load
 
 ### Phase 4: Check-in plus trends
@@ -71,8 +71,18 @@ Stack: Next.js (App Router, TypeScript, PWA) on Vercel, with Supabase for Postgr
   - PDFs parsed into seed JSON (`npm run seed:build`).
   - Second migration adds undated plan templates, whole-meal variants (the coach's "Option #2"), a calorie/macro totals view, and clone functions.
   - Seeded the coach templates plus a starting meal plan and program dated 2026-09-28.
+- 2026-09-28: Phase 3 Today screen done, except set logging.
+  - Plain forms call server actions, so they work before JavaScript loads. Each action checks sign-in and validates its input.
+  - `?date=` lets you look at and log other days. "Today" follows `APP_TIME_ZONE` (default America/Chicago).
 
 ## Review
+
+### Phase 3 Today screen (2026-09-28)
+
+- Type check, lint, and `next build` pass.
+- Tested with Node: meal and eaten-today totals, main vs alternate meal options, weekday mapping, date parsing. This caught `2026-02-30` being accepted as a valid date, which is now fixed.
+- Aaron used the screen in his browser (meal logging, undo, day navigation), and the server logs show no errors.
+- Upserts rerun as `authenticated` in a rolled-back transaction work: the row is created, then updated on conflict, with row-level security on.
 
 ### Phase 1 data (2026-09-28)
 
