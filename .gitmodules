@@ -13,3 +13,6 @@
 [submodule "repositories/seis616-corpweb"]
 	path = repositories/seis616-corpweb
 	url = git@github.com:bucky-badger-gesmer/seis616-corpweb.git
+[submodule "repositories/seis616-delivery-pipeline"]
+	path = repositories/seis616-delivery-pipeline
+	url = git@github.com:bucky-badger-gesmer/seis616-delivery-pipeline.git
