@@ -170,6 +170,7 @@ From the PDF — each maps to a verification check in Phase 5.
 - 2026-11-19: **Published.** Claude created the public repo with `gh repo create --public --source . --push` (worked; the delivery-pipeline HW block didn't recur). `main` = `318fd32`. Fresh clone: 5/5 tests, `cdk diff --all` → 0 stacks with differences.
 - 2026-11-19: **Teardown done.** `cdk destroy --all --force` destroyed both stacks (14:39 UTC). Sweep: 0 Website* stacks, instances, RDS instances/snapshots/automated backups, LBs, target groups, secrets (incl. pending deletion), EIPs, Website* IAM roles; VPC NotFound. One orphan log group from CDK's `RestrictDefaultSG` custom-resource Lambda (0 bytes) deleted by hand. Kept `CDKToolkit`. Log: `hw-cdk-evidence/teardown-log.md`.
 - 2026-11-19: **Report done** — README teardown section pushed (`88534c6`). Evidence committed in `ai-driven-cloud-infrastructure` (`509b8f6`); repo registered as kosmos submodule. Remaining: Canvas submission.
+- 2026-11-19: **Screenshot pass.** Aaron redeployed, walked the console, and captured 10 screenshots (deploy outputs, stacks, subnets, instances, both SG inbound rules, RDS via CLI since the 2026 RDS console doesn't show Publicly accessible/subnets, browser hitting web1 and web2, stacks after teardown). README rewritten to short deploy / verify / tear down steps with the images (`7a238e4`, pushed). Aaron's destroy + manual log-group delete; sweep clean (only `CDKToolkit`). Remaining: Canvas submission.
 
 ## Review
 
