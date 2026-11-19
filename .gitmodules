@@ -16,3 +16,6 @@
 [submodule "repositories/seis616-delivery-pipeline"]
 	path = repositories/seis616-delivery-pipeline
 	url = git@github.com:bucky-badger-gesmer/seis616-delivery-pipeline.git
+[submodule "repositories/seis616-cdk-website"]
+	path = repositories/seis616-cdk-website
+	url = git@github.com:bucky-badger-gesmer/seis616-cdk-website.git
